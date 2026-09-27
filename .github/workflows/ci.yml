@@ -16,7 +16,7 @@ jobs:
       - name: Install Qt and tools
         run: pacman -Syu --noconfirm --needed git qt6-declarative patch diffutils
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Check QML formatting
         run: |

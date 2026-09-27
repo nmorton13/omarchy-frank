@@ -184,6 +184,10 @@ TestCase {
         verify(/action !== "notes" && !FrankAdapter\.isClosePending\(\)/.test(source));
         verify(/onSelectedIndexChanged: if \(root\.notesOpen\)/.test(source));
         verify(/root\.scrollNotes\(/.test(source));
+        // Notes render only through the escaping formatter; no rich text or Markdown engines.
+        verify(/model: NoteFormat\.format\(modelData\.text, root\.accent\.toString\(\)\)/.test(source));
+        compare((source.match(/Text\.StyledText/g) || []).length, 1);
+        verify(!/Text\.RichText|Text\.MarkdownText/.test(source));
     }
 
     function test_guardProbeRetriesOnRefresh() {

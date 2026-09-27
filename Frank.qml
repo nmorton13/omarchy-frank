@@ -5,6 +5,7 @@ import QtQuick
 import qs.Commons
 import qs.Ui
 import "FrankAdapter.js" as FrankAdapter
+import "NoteFormat.js" as NoteFormat
 
 Item {
     id: root
@@ -1189,15 +1190,49 @@ Item {
                                             width: parent.width
                                             wrapMode: Text.WordWrap
                                         }
-                                        Text {
-                                            color: root.foreground
-                                            font.family: root.fontFamily
-                                            font.pixelSize: Style.font.body
-                                            lineHeight: 1.15
-                                            text: modelData.text
-                                            textFormat: Text.PlainText
+                                        Column {
+                                            spacing: Style.spacing.sm
                                             width: parent.width
-                                            wrapMode: Text.WordWrap
+
+                                            Repeater {
+                                                // Escaped note text plus formatter tags only; see NoteFormat.js.
+                                                model: NoteFormat.format(modelData.text, root.accent.toString())
+
+                                                delegate: Item {
+                                                    required property var modelData
+                                                    readonly property bool listItem: modelData.kind === "bullet" || modelData.kind === "numbered"
+                                                    // Fixed marker column so "1." and "10." items line up.
+                                                    readonly property real markerWidth: listItem ? Style.space(modelData.kind === "numbered" ? 26 : 16) : 0
+                                                    readonly property real indent: modelData.level * Style.spacing.xxxl
+
+                                                    height: blockText.implicitHeight
+                                                    width: parent.width
+
+                                                    Text {
+                                                        color: modelData.kind === "bullet" ? root.accent : root.muted
+                                                        font.family: root.fontFamily
+                                                        font.pixelSize: Style.font.body
+                                                        text: modelData.marker
+                                                        textFormat: Text.PlainText
+                                                        visible: parent.listItem
+                                                        x: parent.indent
+                                                    }
+                                                    Text {
+                                                        id: blockText
+
+                                                        color: modelData.kind === "heading" ? root.accent : root.foreground
+                                                        font.family: root.fontFamily
+                                                        font.pixelSize: modelData.kind === "heading" ? Style.font.title : Style.font.body
+                                                        font.weight: modelData.kind === "heading" ? Font.Bold : Font.Normal
+                                                        lineHeight: 1.15
+                                                        text: modelData.html
+                                                        textFormat: Text.StyledText
+                                                        width: parent.width - x
+                                                        wrapMode: Text.WordWrap
+                                                        x: parent.indent + parent.markerWidth
+                                                    }
+                                                }
+                                            }
                                         }
                                         Text {
                                             color: root.muted

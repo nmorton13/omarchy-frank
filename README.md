@@ -2,7 +2,13 @@
 
 A hotkey overlay for [Omarchy](https://omarchy.org) that shows your [Frank](https://frankagent.dev) workspace: current status, open todos grouped by project, and each project's notes. Check off a todo without leaving what you're doing.
 
-<!-- Screenshot: docs/screenshot.png -->
+![Frank overlay showing todos grouped by project](docs/screenshot-todos.png)
+
+Press → on a project to widen the card and read its notes:
+
+![Frank overlay with the notes pane open](docs/screenshot-notes.png)
+
+<sub>Screenshots use demo data.</sub>
 
 - **Native look.** Built on the Omarchy shell's own UI kit and theme tokens, so it restyles with `omarchy theme set` like the clipboard and emoji pickers.
 - **Keyboard and mouse.** One shared cursor: hover a row or arrow to it, then act.
@@ -24,12 +30,12 @@ The overlay only talks to Frank through `frank-cloud-post.sh`, and it refuses to
 
 ### 2. Install the plugin
 
-Copy the four runtime files into your plugins folder (Omarchy rejects symlinks there):
+Copy the runtime files into your plugins folder (Omarchy rejects symlinks there):
 
 ```sh
 dest=~/.config/omarchy/plugins/nmorton.frank
 mkdir -p "$dest"
-cp manifest.json Frank.qml FrankAdapter.js FrankGuardProbe.sh "$dest"/
+cp manifest.json Frank.qml FrankAdapter.js NoteFormat.js FrankGuardProbe.sh "$dest"/
 omarchy plugin validate "$dest"
 omarchy plugin enable nmorton.frank
 ```
@@ -60,7 +66,7 @@ Run `hyprctl reload`. You can also toggle it from a terminal with `omarchy-shell
 | `r` / F5, or **Refresh** | Reload from Frank |
 | Esc, **Dismiss**, or click outside | Hide the notes if open, otherwise dismiss |
 
-While the notes are open they follow the project under the cursor. Notes are read-only in the overlay.
+While the notes are open they follow the project under the cursor. Notes are read-only in the overlay. They are lightly formatted: Markdown headings, bullet and numbered lists, **bold**, *italic* and `code`, and one-line notes written as `GOAL: … TEST: …` sections are split into labelled paragraphs. Note text is always escaped first, so a note can never inject links or images.
 
 ## How it talks to Frank
 

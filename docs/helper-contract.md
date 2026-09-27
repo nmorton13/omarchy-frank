@@ -1,8 +1,8 @@
 # Frank helper contract (pinned)
 
-Source: Frank's published helper at <https://frankagent.dev/skills/frank-cloud/frank-cloud-post.sh>, version **2.3.3** (merged in [nmorton13/frank#19](https://github.com/nmorton13/frank/pull/19); identical on `main` at `8d2379ba154119c0a6ada34f6d156293b80ebcff`, as `skills/frank-cloud/scripts/frank-cloud-post.sh` and `public/skills/frank-cloud/frank-cloud-post.sh`). SHA-256 `0421e7b16755d4027104f640221c1ff80a63908bd0a1b207613509f424437d6a`. The verbatim credential-free copy is `tests/fixtures/frank-cloud-post.sh`. The checksum pins the supported bytes; the hosted URL may change.
+Source: Frank's published helper at <https://frankagent.dev/skills/frank-cloud/frank-cloud-post.sh>, version **2.3.4** (HTTPS guard from [nmorton13/frank#19](https://github.com/nmorton13/frank/pull/19), `skill-update` symlink fix from [#20](https://github.com/nmorton13/frank/pull/20); identical on `main` at `755fd37efdf8d682dffe8d4dd3a6e0e8c855583c`, as `skills/frank-cloud/scripts/frank-cloud-post.sh` and `public/skills/frank-cloud/frank-cloud-post.sh`). SHA-256 `8118e0f77d3c77000692a8bbe5bafcbdc3f327b7f6354a09a00051f4de14f319`. The verbatim credential-free copy is `tests/fixtures/frank-cloud-post.sh`. The checksum pins the supported bytes; the hosted URL may change.
 
-The overlay needs helper **2.3.3 or newer**: that is the first version that refuses to send credentials over plain `http://`.
+The overlay needs helper **2.3.4 or newer**. 2.3.3 is the first version that refuses to send credentials over plain `http://`; 2.3.4 also makes `skill-update` follow the `~/.local/bin` symlink, so it updates the real helper instead of writing into `~/.local/bin`.
 
 Pinned source quotations (line numbers in the pinned file):
 
@@ -37,7 +37,7 @@ if [[ -z "${FRANK_CLOUD_BASE:-}" || -z "${FRANK_CLOUD_WS:-}" || -z "${FRANK_CLOU
 fi
 require_secure_url "$FRANK_CLOUD_BASE" "FRANK_CLOUD_BASE"
 
-# 378–384: dispatch
+# 385–391: dispatch
 if [[ "$TYPE" == "open" ]]; then
   api_get "/open"; printf '\n'; exit 0
 fi
@@ -45,7 +45,7 @@ if [[ "$TYPE" == "status-view" ]]; then
   api_get "/status"; printf '\n'; exit 0
 fi
 
-# 436–447: close dispatch (ID raw in URL; adapter must canonicalize)
+# 443–454: close dispatch (ID raw in URL; adapter must canonicalize)
 if [[ "$TYPE" == "close" ]]; then
   ID="${1:-}"
   [[ -n "$ID" ]] || { usage; exit 2; }
@@ -58,10 +58,10 @@ if [[ "$TYPE" == "close" ]]; then
 fi
 ```
 
-`list --type note [--project <name>] --limit 50` (pinned lines 360–376, below) is the notes pane's only read. The adapter passes the project name as its own argv element, taken from a validated `/open` read (the helper URL-encodes it); unassigned notes have no server filter, so the adapter lists all notes and keeps those with a null project. The response is `GET /v1/workspaces/{ws}/entries?type=note…`: `{entries: Entry[], truncated: boolean}`, and every entry must be `type: note`. Notes are read-only in the overlay.
+`list --type note [--project <name>] --limit 50` (pinned lines 367–383, below) is the notes pane's only read. The adapter passes the project name as its own argv element, taken from a validated `/open` read (the helper URL-encodes it); unassigned notes have no server filter, so the adapter lists all notes and keeps those with a null project. The response is `GET /v1/workspaces/{ws}/entries?type=note…`: `{entries: Entry[], truncated: boolean}`, and every entry must be `type: note`. Notes are read-only in the overlay.
 
 ```bash
-# 360–376: list dispatch (read-only; filters URL-encoded)
+# 367–383: list dispatch (read-only; filters URL-encoded)
 if [[ "$TYPE" == "list" ]]; then
   ...
       --type|--project|--status|--limit)

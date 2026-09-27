@@ -20,13 +20,13 @@ Press → on a project to widen the card and read its notes:
 
 - Omarchy with the Quickshell-based `omarchy-shell` (plugin schema v1).
 - A Frank Cloud workspace and an agent credential in `~/.config/frank/frankrc`, as set up by Frank's `frank-cloud-post.sh redeem` or `bootstrap`.
-- Frank's `frank-cloud-post.sh` helper, **version 2.3.3 or newer**, on your `PATH` (see below).
+- Frank's `frank-cloud-post.sh` helper, **version 2.3.4 or newer**, on your `PATH` (see below).
 
 ## Install
 
-### 1. Update the Frank helper to 2.3.3 or newer
+### 1. Update the Frank helper to 2.3.4 or newer
 
-The overlay only talks to Frank through `frank-cloud-post.sh`, and it refuses to read anything unless the helper refuses to send your credential over plain `http://`. Frank's helper does that from version 2.3.3. Check yours and update it if needed:
+The overlay only talks to Frank through `frank-cloud-post.sh`, and it refuses to read anything unless the helper refuses to send your credential over plain `http://`. Frank's helper does that from version 2.3.3, and 2.3.4 fixes `skill-update` when the helper is linked from `~/.local/bin`. Check yours and update it if needed:
 
 ```sh
 grep '^SKILL_VERSION=' "$(command -v frank-cloud-post.sh)"
@@ -109,7 +109,7 @@ tests/helper-guard.test.sh
 - `qmltestrunner` needs `-input tests/`: a bare `tests/` argument is treated as a test-function filter.
 - `QML_XHR_ALLOW_FILE_READ=1` lets the source-inspection tests read this repository's files.
 - The tests use synthetic responses and fake helpers only; they never touch your helper, credentials or Frank Cloud. Quickshell's `Process` can't be loaded outside the shell, so the overlay's process wiring is checked by inspecting the source, and the adapter's logic is tested directly.
-- `tests/helper-guard.test.sh` checks the pinned helper copy in `tests/fixtures/` (Frank 2.3.3, from [nmorton13/frank](https://github.com/nmorton13/frank), MIT): its checksum, that it has the HTTPS guard, its HTTPS behaviour against a fake `curl`, and that the overlay's startup check accepts it and rejects a helper without the guard.
+- `tests/helper-guard.test.sh` checks the pinned helper copy in `tests/fixtures/` (Frank 2.3.4, from [nmorton13/frank](https://github.com/nmorton13/frank), MIT): its checksum, that it has the HTTPS guard, its HTTPS behaviour against a fake `curl`, and that the overlay's startup check accepts it and rejects a helper without the guard.
 - `qmllint` warns that `qs.*` modules and `PanelWindow` can't be resolved outside the shell; that's expected.
 - CI runs the QML tests and the helper check on every push and pull request.
 

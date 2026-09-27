@@ -64,7 +64,7 @@ Item {
 
     function describe(category) {
         var messages = {
-            "helper HTTPS guard not verified": "The Frank helper doesn't refuse plain http:// yet. Update it to 2.3.3 or newer with frank-cloud-post.sh skill-update, then press r.",
+            "helper HTTPS guard not verified": "The Frank helper doesn't refuse plain http:// yet. Update it to 2.3.4 or newer with frank-cloud-post.sh skill-update, then press r.",
             "busy": "A close is already in progress.",
             "no-fresh-list": "The list is out of date. Refresh before closing a todo.",
             "not-open-todo": "That todo is no longer open in the latest read.",

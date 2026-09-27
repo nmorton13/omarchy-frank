@@ -5,14 +5,14 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 fixture=tests/fixtures/frank-cloud-post.sh
-checksum=0421e7b16755d4027104f640221c1ff80a63908bd0a1b207613509f424437d6a
-min_version=2.3.3
+checksum=8118e0f77d3c77000692a8bbe5bafcbdc3f327b7f6354a09a00051f4de14f319
+min_version=2.3.4
 fail() { echo "helper guard check: $*" >&2; exit 1; }
 
 [[ "$(sha256sum "$fixture" | cut -d' ' -f1)" == "$checksum" ]] ||
   fail "pinned helper checksum mismatch (see docs/helper-contract.md to re-pin)"
 
-# The guard must be present: require_secure_url and SKILL_VERSION >= 2.3.3.
+# The guard must be present: require_secure_url and SKILL_VERSION >= 2.3.4.
 grep -q '^require_secure_url() {' "$fixture" ||
   fail "helper has no require_secure_url; update it with: frank-cloud-post.sh skill-update"
 version="$(sed -n 's/^SKILL_VERSION="\([0-9.]*\)"$/\1/p' "$fixture")"

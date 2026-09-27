@@ -1,0 +1,16 @@
+--- a/frank-cloud-post.sh
++++ b/frank-cloud-post.sh
+@@ -144,6 +144,13 @@
+   exit 1
+ fi
+ 
++# Refuse to send credentials to a non-HTTPS endpoint (including empty/unset
++# bases, which are rejected by the required-variable check above).
++case "$FRANK_CLOUD_BASE" in
++  https://?*) ;;
++  *) echo "frank-cloud: FRANK_CLOUD_BASE must use HTTPS" >&2; exit 1 ;;
++esac
++
+ BASE="${FRANK_CLOUD_BASE%/}"
+ WS="${FRANK_CLOUD_WS}"
+ TOKEN="${FRANK_CLOUD_TOKEN}"

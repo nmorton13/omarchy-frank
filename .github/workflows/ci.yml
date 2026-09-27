@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    # Arch matches Omarchy's Qt and tool paths (/usr/lib/qt6/bin).
+    container: archlinux:latest
+    steps:
+      - name: Install Qt and tools
+        run: pacman -Syu --noconfirm --needed git qt6-declarative patch diffutils
+
+      - uses: actions/checkout@v4
+
+      - name: Check QML formatting
+        run: |
+          cp Frank.qml "$RUNNER_TEMP/Frank.qml"
+          /usr/lib/qt6/bin/qmlformat -i "$RUNNER_TEMP/Frank.qml"
+          diff -u Frank.qml "$RUNNER_TEMP/Frank.qml"
+
+      - name: QML tests
+        env:
+          QML_XHR_ALLOW_FILE_READ: "1"
+          QT_QPA_PLATFORM: offscreen
+        run: /usr/lib/qt6/bin/qmltestrunner -input tests/
+
+      - name: Helper patch and contract
+        run: bash tests/helper-patch.test.sh

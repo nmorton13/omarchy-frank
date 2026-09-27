@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "nmorton.frank",
+  "name": "Frank",
+  "version": "0.2.0",
+  "author": "Nathan Morton",
+  "description": "Review Frank context and close todos from a hotkey overlay",
+  "kinds": ["overlay"],
+  "keepLoaded": true,
+  "entryPoints": { "overlay": "Frank.qml" }
+}

@@ -1,11 +1,13 @@
 # Frank helper contract (pinned)
 
-Source: Frank's published helper at <https://frankagent.dev/skills/frank-cloud/frank-cloud-post.sh>. Its current bytes match the pinned `nmorton13/frank` commit `dc2a09ef32a3931ebc4b54612878f8e02347b8e8`, formerly `skills/frank-cloud/scripts/frank-cloud-post.sh` and now `public/skills/frank-cloud/frank-cloud-post.sh`; SHA-256 `08f19cea38fccab5a7e7cc2da72e7c1c2c9e4c2eed421c840bd0e5bb1c5b8151`. The verbatim credential-free copy is `tests/fixtures/frank-cloud-post.sh`. The checksum pins the supported bytes; the hosted URL may change.
+Source: Frank's published helper at <https://frankagent.dev/skills/frank-cloud/frank-cloud-post.sh>, version **2.3.3** (merged in [nmorton13/frank#19](https://github.com/nmorton13/frank/pull/19); identical on `main` at `8d2379ba154119c0a6ada34f6d156293b80ebcff`, as `skills/frank-cloud/scripts/frank-cloud-post.sh` and `public/skills/frank-cloud/frank-cloud-post.sh`). SHA-256 `0421e7b16755d4027104f640221c1ff80a63908bd0a1b207613509f424437d6a`. The verbatim credential-free copy is `tests/fixtures/frank-cloud-post.sh`. The checksum pins the supported bytes; the hosted URL may change.
 
-Pinned source quotations (original line numbers):
+The overlay needs helper **2.3.3 or newer**: that is the first version that refuses to send credentials over plain `http://`.
+
+Pinned source quotations (line numbers in the pinned file):
 
 ```bash
-# 21–31: config resolution (the helper, not the adapter, sources frankrc)
+# 21–29: config resolution (the helper, not the adapter, sources frankrc)
 _FRANK_DIR="${XDG_CONFIG_HOME:-${HOME:-}/.config}/frank"
 _FRANK_RC="${_FRANK_DIR}/frankrc"
 if [[ -n "${FRANK_PROFILE:-}" ]]; then
@@ -16,13 +18,26 @@ if [[ -f "$_FRANK_RC" ]]; then
   . "$_FRANK_RC"
 fi
 
-# 142–145: required configuration
+# 65–74: HTTPS guard
+require_secure_url() {
+  local url="$1" what="$2"
+  local loopback='^http://(localhost|127\.0\.0\.1|\[::1\])(:[0-9]+)?(/[^@]*)?$'
+  if [[ "$url" != *[[:space:][:cntrl:]\\]* ]]; then
+    [[ "$url" =~ ^https://. ]] && return 0
+    [[ "$url" =~ $loopback ]] && return 0
+  fi
+  echo "frank-cloud: ${what} must use https:// (plain http is only allowed for localhost)" >&2
+  exit 1
+}
+
+# 183–189: required configuration, then the guard for every remaining command
 if [[ -z "${FRANK_CLOUD_BASE:-}" || -z "${FRANK_CLOUD_WS:-}" || -z "${FRANK_CLOUD_TOKEN:-}" ]]; then
   echo "FRANK_CLOUD_BASE, FRANK_CLOUD_WS, and FRANK_CLOUD_TOKEN must all be set" >&2
   exit 1
 fi
+require_secure_url "$FRANK_CLOUD_BASE" "FRANK_CLOUD_BASE"
 
-# 334–340: dispatch
+# 378–384: dispatch
 if [[ "$TYPE" == "open" ]]; then
   api_get "/open"; printf '\n'; exit 0
 fi
@@ -30,7 +45,7 @@ if [[ "$TYPE" == "status-view" ]]; then
   api_get "/status"; printf '\n'; exit 0
 fi
 
-# 392–403: close dispatch (ID raw in URL; adapter must canonicalize)
+# 436–447: close dispatch (ID raw in URL; adapter must canonicalize)
 if [[ "$TYPE" == "close" ]]; then
   ID="${1:-}"
   [[ -n "$ID" ]] || { usage; exit 2; }
@@ -43,10 +58,10 @@ if [[ "$TYPE" == "close" ]]; then
 fi
 ```
 
-`list --type note [--project <name>] --limit 50` (pinned lines 316–332, below) is the notes pane's only read. The adapter passes the project name as its own argv element, taken from a validated `/open` read (the helper URL-encodes it); unassigned notes have no server filter, so the adapter lists all notes and keeps those with a null project. The response is `GET /v1/workspaces/{ws}/entries?type=note…`: `{entries: Entry[], truncated: boolean}`, and every entry must be `type: note`. Notes are read-only in the overlay.
+`list --type note [--project <name>] --limit 50` (pinned lines 360–376, below) is the notes pane's only read. The adapter passes the project name as its own argv element, taken from a validated `/open` read (the helper URL-encodes it); unassigned notes have no server filter, so the adapter lists all notes and keeps those with a null project. The response is `GET /v1/workspaces/{ws}/entries?type=note…`: `{entries: Entry[], truncated: boolean}`, and every entry must be `type: note`. Notes are read-only in the overlay.
 
 ```bash
-# 316–332: list dispatch (read-only; filters URL-encoded)
+# 360–376: list dispatch (read-only; filters URL-encoded)
 if [[ "$TYPE" == "list" ]]; then
   ...
       --type|--project|--status|--limit)
@@ -59,4 +74,14 @@ if [[ "$TYPE" == "list" ]]; then
 
 `close <id>` returns the response body on stdout (expected `{entry: Entry}` with matching ID, `type: todo`, `status: closed` for validated closure). Its `curl -fsS` invocation does **not** print a numeric HTTP status; a zero exit alone is insufficient evidence of closure. The UI therefore reports `HTTP status unavailable (helper does not emit HTTP status)` alongside the close command, canonical ID, and attempt timestamp, and never fabricates a status code. Adding an exact numeric status requires a separately reviewed helper-contract change; the adapter does not make a second authenticated request for one.
 
-The pinned helper has **no HTTPS guard**. The versioned local patch adds rejection before authenticated network traffic. The installed helper must be the patched pinned copy; the adapter probes this behavior under synthetic credentials before permitting reads. See `patches/README.md` for source verification, installation, rollback, and re-pinning.
+## HTTPS guard and the startup probe
+
+From 2.3.3 the helper refuses any base that is not `https://`, before any request, for every command. Plain `http://` is allowed only for loopback (`localhost`, `127.0.0.1`, `[::1]`, optional numeric port) so a local Worker can be used in development. `redeem` also requires the setup link to be on `FRANK_CLOUD_BASE`, and only writes a `frankrc` with `wsp_…` workspace IDs, `frank_agent_…` tokens and `[a-z0-9_-]` labels. The overlay never runs `redeem` or `bootstrap`.
+
+The overlay does not trust the version number. At startup (and on Refresh after a failure), `FrankGuardProbe.sh` runs the installed helper's `status-view` in a throwaway `HOME` with synthetic credentials, a fake `curl`, and `FRANK_CLOUD_BASE=http://frank.invalid/`. The probe passes only if the helper exits non-zero without calling `curl`. It must use a non-loopback host, since loopback `http://` is allowed by design. `tests/helper-guard.test.sh` checks this against the pinned copy and against the same helper with its guard removed.
+
+## Re-pinning after a helper release
+
+1. Fetch the hosted helper to a temporary file and review the full diff against `tests/fixtures/frank-cloud-post.sh`: the commands above, credential handling, response envelopes, and every network call.
+2. Replace the fixture, then update the checksum in `tests/helper-guard.test.sh` and the version, commit, checksum and line numbers in this document.
+3. Run `tests/helper-guard.test.sh` and the QML tests. Tests never touch the installed helper or Frank Cloud.
